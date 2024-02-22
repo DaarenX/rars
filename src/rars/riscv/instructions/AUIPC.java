@@ -1,9 +1,12 @@
 package rars.riscv.instructions;
 
+import rars.Globals;
 import rars.ProgramStatement;
 import rars.riscv.hardware.RegisterFile;
 import rars.riscv.BasicInstruction;
 import rars.riscv.BasicInstructionFormat;
+
+import java.util.Arrays;
 
 /*
 Copyright (c) 2017,  Benjamin Landers
@@ -40,6 +43,9 @@ public class AUIPC extends BasicInstruction {
 
     public void simulate(ProgramStatement statement) {
         int[] operands = statement.getOperands();
+        if (operands[0] == 6 && operands[1] == 0) {
+            Globals.callingConventionChecker.auipc_workaround();
+        }
         RegisterFile.updateRegister(operands[0], RegisterFile.getProgramCounter() - INSTRUCTION_LENGTH + (operands[1] << 12));
     }
 }

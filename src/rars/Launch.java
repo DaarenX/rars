@@ -1,6 +1,9 @@
 package rars;
 
 import rars.api.Program;
+import rars.custom.callingconvention.CallingConventionErrorType;
+import rars.custom.memory.MemoryCheckerException;
+import rars.custom.memory.MemoryErrorType;
 import rars.riscv.InstructionSet;
 import rars.riscv.dump.DumpFormat;
 import rars.riscv.dump.DumpFormatLoader;
@@ -14,14 +17,9 @@ import rars.venus.VenusUI;
 import rars.api.Options;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Observable;
-import java.util.Observer;
+import java.io.*;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /*
 Copyright (c) 2003-2012,  Pete Sanderson and Kenneth Vollmar
@@ -136,6 +134,7 @@ public class Launch {
         new Launch(args);
     }
     private Launch(String[] args) {
+        Globals.reset();
         Globals.initialize();
 
         options = new Options();
@@ -165,8 +164,29 @@ public class Launch {
             System.setProperty("java.awt.headless", "true");
             
             dumpSegments(runCommand());
-            System.exit(Globals.exitCode);
+
+            try {
+                String fileName = args[0];
+                System.out.println(fileName);
+                BufferedWriter bw = new BufferedWriter(new FileWriter(fileName + "-exceptions.json"));
+                bw.write(exceptionListToFile());
+                bw.close();
+            } catch (IOException e) {
+                System.out.println("MemoryCheckerExceptions: " + Globals.memoryChecker.getExceptionList());
+                System.out.println("CallingConventionCheckerExceptions: " + Globals.callingConventionChecker.getExceptionList());
+            }
+
+
         }
+    }
+
+    private String exceptionListToFile() {
+        List<CallingConventionErrorType> cccList = Globals.callingConventionChecker.getExceptionList();
+        List<MemoryErrorType> mcList = Globals.memoryChecker.getExceptionList();
+        return "{\n" +
+                "    \"callingconvention\": [" + cccList.stream().map(it -> '"' + it.name() + '"').collect(Collectors.joining(",")) + "],\n" +
+                "    \"memory\": [" + mcList.stream().map(it -> '"' + it.name() + '"').collect(Collectors.joining(",")) + "]\n" +
+               "}\n";
     }
 
     private void displayAllPostMortem(Program program) {
@@ -518,6 +538,8 @@ public class Launch {
                     assert done == Simulator.Reason.BREAKPOINT : "Internal error: All cases other than breakpoints should be handled already";
                     displayAllPostMortem(program); // print registers if we hit a breakpoint, then continue
                 }
+                Globals.memoryChecker.onExitProgram();
+                Globals.callingConventionChecker.onExitProgram();
 
             } catch (SimulationException e) {
                 Globals.exitCode = simulateErrorExitCode;

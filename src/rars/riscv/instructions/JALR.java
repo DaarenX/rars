@@ -1,10 +1,13 @@
 package rars.riscv.instructions;
 
+import rars.Globals;
 import rars.ProgramStatement;
 import rars.riscv.hardware.RegisterFile;
 import rars.riscv.BasicInstruction;
 import rars.riscv.BasicInstructionFormat;
 import rars.riscv.InstructionSet;
+
+import java.util.Arrays;
 
 /*
 Copyright (c) 2017,  Benjamin Landers
@@ -41,6 +44,18 @@ public class JALR extends BasicInstruction {
 
     public void simulate(ProgramStatement statement) {
         int[] operands = statement.getOperands();
+
+
+        if (operands[0] == 1 && operands[1] == 6) {
+            // call
+            Globals.memoryChecker.onEnterNewScope();
+            Globals.callingConventionChecker.onEnterNewScope();
+            Globals.callingConventionChecker.jalr_workaround();
+        } else if (operands[0] == 0 && operands[1] == 1) {
+            // ret
+            Globals.memoryChecker.onLeaveScope();
+            Globals.callingConventionChecker.onLeaveScope();
+        }
         int target = RegisterFile.getValue(operands[1]);
         InstructionSet.processReturnAddress(operands[0]);
         // Set PC = $t2 + immediate with the last bit set to 0

@@ -1,6 +1,8 @@
 package rars.api;
 
 import rars.*;
+import rars.riscv.AbstractSyscall;
+import rars.riscv.SyscallLoader;
 import rars.riscv.hardware.*;
 import rars.simulator.ProgramArgumentList;
 import rars.simulator.Simulator;
@@ -9,6 +11,7 @@ import rars.util.SystemIO;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * <p>
@@ -169,6 +172,10 @@ public class Program {
     public Simulator.Reason simulate() throws SimulationException {
         Simulator.Reason ret = null;
         SimulationException e = null;
+
+       for (ProgramStatement statement: code.getMachineList()) {
+//           System.out.println(statement);
+       }
 
         // Swap out global state for local state.
         boolean selfMod = Globals.getSettings().getBooleanSetting(Settings.Bool.SELF_MODIFYING_CODE_ENABLED);

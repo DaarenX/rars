@@ -381,6 +381,7 @@ public class Simulator extends Observable {
 
             RegisterFile.initializeProgramCounter(pc);
             ProgramStatement statement = null;
+            int line = 0;
             int steps = 0;
             boolean ebreak = false, waiting = false;
 
@@ -481,6 +482,8 @@ public class Simulator extends Observable {
                                     SimulationException.ILLEGAL_INSTRUCTION);
                         }
                         // THIS IS WHERE THE INSTRUCTION EXECUTION IS ACTUALLY SIMULATED!
+                        line = line + 1;
+//                        System.out.println(line + ": " + instruction.getName());
                         instruction.simulate(statement);
 
                         // IF statement added 7/26/06 (explanation above)

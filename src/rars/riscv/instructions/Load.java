@@ -1,5 +1,6 @@
 package rars.riscv.instructions;
 
+import rars.Globals;
 import rars.ProgramStatement;
 import rars.SimulationException;
 import rars.riscv.hardware.AddressErrorException;
@@ -56,6 +57,8 @@ public abstract class Load extends BasicInstruction {
         int[] operands = statement.getOperands();
         operands[1] = (operands[1] << 20) >> 20;
         try {
+            long address = RegisterFile.getRegister(operands[2]).getValueNoNotify() + operands[1];
+            Globals.callingConventionChecker.onRegisterLoad(RegisterFile.getRegister(operands[0]).getName(), address);
             RegisterFile.updateRegister(operands[0], load(RegisterFile.getValue(operands[2]) + operands[1]));
         } catch (AddressErrorException e) {
             throw new SimulationException(statement, e);

@@ -1,8 +1,10 @@
 package rars.riscv.instructions;
 
+import rars.Globals;
 import rars.ProgramStatement;
 import rars.SimulationException;
 import rars.riscv.hardware.AddressErrorException;
+import rars.riscv.hardware.Register;
 import rars.riscv.hardware.RegisterFile;
 import rars.riscv.BasicInstruction;
 import rars.riscv.BasicInstructionFormat;
@@ -54,6 +56,8 @@ public abstract class Store extends BasicInstruction {
         int[] operands = statement.getOperands();
         operands[1] = (operands[1] << 20) >> 20;
         try {
+            long address = RegisterFile.getRegister(operands[2]).getValueNoNotify() + operands[1];
+            Globals.callingConventionChecker.onRegisterSave(RegisterFile.getRegister(operands[0]).getName(), address);
             store(RegisterFile.getValue(operands[2]) + operands[1], RegisterFile.getValueLong(operands[0]));
         } catch (AddressErrorException e) {
             throw new SimulationException(statement, e);

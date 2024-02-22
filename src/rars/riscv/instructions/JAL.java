@@ -1,5 +1,6 @@
 package rars.riscv.instructions;
 
+import rars.Globals;
 import rars.ProgramStatement;
 import rars.riscv.hardware.RegisterFile;
 import rars.riscv.BasicInstruction;

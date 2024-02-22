@@ -157,6 +157,10 @@ public class RegisterFile {
         return instance.getRegister(name);
     }
 
+    public static Register getRegister(int number) {
+        return instance.getRegister(number);
+    }
+
     /**
      * For initializing the Program Counter.  Do not use this to implement jumps and
      * branches, as it will NOT record a backstep entry with the restore value.

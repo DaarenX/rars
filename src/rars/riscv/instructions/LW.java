@@ -1,6 +1,7 @@
 package rars.riscv.instructions;
 
 import rars.Globals;
+import rars.custom.memory.MemoryChecker;
 import rars.riscv.hardware.AddressErrorException;
 
 /*
@@ -36,6 +37,7 @@ public class LW extends Load {
     }
 
     public long load(int address) throws AddressErrorException {
+        Globals.memoryChecker.checkLoad(address, MemoryChecker.Type.WORD);
         return Globals.memory.getWord(address);
     }
 }

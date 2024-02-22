@@ -1,6 +1,7 @@
 package rars.riscv.instructions;
 
 import rars.Globals;
+import rars.custom.memory.MemoryChecker;
 import rars.riscv.hardware.AddressErrorException;
 
 /*
@@ -36,6 +37,7 @@ public class LH extends Load {
     }
 
     public long load(int address) throws AddressErrorException {
+        Globals.memoryChecker.checkLoad(address, MemoryChecker.Type.HALF);
         return (Globals.memory.getHalf(address) << 16) >> 16; // Shifting sign extends
     }
 }

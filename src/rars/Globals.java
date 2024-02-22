@@ -1,16 +1,17 @@
 package rars;
 
 import rars.assembler.SymbolTable;
+import rars.custom.callingconvention.CallingConventionChecker;
+import rars.custom.memory.MemoryChecker;
+import rars.riscv.SyscallLoader;
 import rars.riscv.hardware.Memory;
 import rars.riscv.InstructionSet;
 import rars.riscv.SyscallNumberOverride;
+import rars.riscv.hardware.RegisterFile;
 import rars.util.PropertiesFile;
 import rars.venus.VenusUI;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Properties;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 /*
@@ -76,6 +77,12 @@ public class Globals {
      * Flag to determine whether or not to produce internal debugging information.
      **/
     public static boolean debug = false;
+
+
+    public static MemoryChecker memoryChecker;
+
+    public static CallingConventionChecker callingConventionChecker;
+
     /**
      * Object that contains various settings that can be accessed modified internally.
      **/
@@ -160,7 +167,8 @@ public class Globals {
         return settings;
     }
 
-    /**
+
+     /**
      * Method called once upon system initialization to create the global data structures.
      **/
 
@@ -174,8 +182,32 @@ public class Globals {
             initialized = true;
             debug = false;
             memory.clear(); // will establish memory configuration from setting
+            memoryChecker = new MemoryChecker(Memory.stackPointer);
+            RegisterFile.getRegister("sp").addObserver(memoryChecker);
+            callingConventionChecker = new CallingConventionChecker();
         }
     }
+
+    public static void reset() {
+        if (initialized) {
+            callingConventionChecker.removeObservers();
+            RegisterFile.getRegister("sp").deleteObserver(memoryChecker);
+            instructionSet = null;
+            program = null;
+            symbolTable = null;
+            memory = null;
+            debug = false;
+            memoryChecker = null;
+            callingConventionChecker = null;
+            settings = null;
+            userInputAlert = "**** user input : ";
+            gui = null;
+            exitCode = 0;
+            runSpeedPanelExists = false;
+            initialized = false;
+        }
+    }
+
 
     // Read byte limit of Run I/O or RARS Messages text to buffer.
     private static int getMessageLimit() {

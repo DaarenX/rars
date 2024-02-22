@@ -1,0 +1,55 @@
+.text
+main:
+	# output(ggt(input(), input())
+
+	li t0, 2048
+	mv a0, t0
+	li a1, 100
+	
+	addi sp, sp, -4 #Speichern von t0 in Stack
+	sw t0, (sp)
+	
+	call ggt
+	
+	lw t0, (sp) #Laden von t0 con Stack
+	addi sp, sp, 4
+	
+	li a7, 1
+	ecall
+	# exit()
+	li a7, 10
+	ecall
+	
+ggt:
+	# Implementierung beginnt hier
+	
+Lstart:
+	
+	mv t1, a1 # =a
+	mv t0, a0 # =b
+	
+	beqz t0, Lthen # Wenn b == 0 goto Lthen
+	
+	
+	
+	mv a1, t0 # b wird als a übergeben
+	rem a0, t1, t0 #b wird als a % b übergeben 
+	
+	addi sp, sp, -12 #Stackpointer für RA versetzen
+	sw ra, (sp) #Ra im Stack speichern
+	sw t0, 4(sp)
+	sw t1, 8(sp)
+
+	call ggt
+
+	lw ra, (sp) #Ra aus Stack laden
+	lw t0, 4(sp)
+    lw t1, 8(sp)
+    addi sp, sp, 12 #Stack wieder freigeben
+	
+	Lthen:
+    mv a0, t1 # a zurückgeben
+    ret
+		
+		
+		

@@ -846,6 +846,7 @@ public class Assembler {
     // of a multiline list, which does not contain the directive token. Just pass the
     // current directive as argument.
     private void storeNumeric(TokenList tokens, Directives directive, ErrorList errors) {
+        // TODO: Hier memorychecker data objekt initialisieren
         Token token = tokens.get(0);
         // A double-check; should have already been caught...removed ".word" exemption 11/20/06
         assert passesDataSegmentCheck(token);
@@ -1137,6 +1138,7 @@ public class Assembler {
                         for (byte b : bytesOfChar) {
                             Globals.memory.set(this.dataAddress.get(), b,
                                     DataTypes.CHAR_SIZE);
+                            Globals.memoryChecker.assembleDataStore(this.dataAddress.get(), DataTypes.CHAR_SIZE);
                             this.dataAddress.increment(DataTypes.CHAR_SIZE);
                         }
                     } catch (AddressErrorException e) {
@@ -1149,6 +1151,7 @@ public class Assembler {
                 if (direct == Directives.ASCIZ || direct == Directives.STRING) {
                     try {
                         Globals.memory.set(this.dataAddress.get(), 0, DataTypes.CHAR_SIZE);
+                        Globals.memoryChecker.assembleDataStore(this.dataAddress.get(), DataTypes.CHAR_SIZE);
                     } catch (AddressErrorException e) {
                         errors.add(new ErrorMessage(token.getSourceProgram(), token
                                 .getSourceLine(), token.getStartPos(), "\""
@@ -1183,6 +1186,7 @@ public class Assembler {
         }
         try {
             Globals.memory.set(this.dataAddress.get(), value, lengthInBytes);
+            Globals.memoryChecker.assembleDataStore(this.dataAddress.get(), lengthInBytes);
         } catch (AddressErrorException e) {
             errors.add(new ErrorMessage(token.getSourceProgram(), token.getSourceLine(), token
                     .getStartPos(), "\"" + this.dataAddress.get()

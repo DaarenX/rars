@@ -1,6 +1,7 @@
 package rars.riscv.instructions;
 
 import rars.Globals;
+import rars.custom.memory.MemoryChecker;
 import rars.riscv.hardware.AddressErrorException;
 
 public class SD extends Store {
@@ -9,6 +10,7 @@ public class SD extends Store {
     }
 
     public void store(int address, long data) throws AddressErrorException {
+        Globals.memoryChecker.checkStore(address, MemoryChecker.Type.DOUBLE);
         Globals.memory.setDoubleWord(address, data);
     }
 }
