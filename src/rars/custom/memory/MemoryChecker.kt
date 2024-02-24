@@ -25,9 +25,20 @@ class MemoryChecker(spBaseAddress: Long): Observer, ScopeAware {
                 if ((currentUpperLimit - spValue) % 4 != 0L) throwToList("stack should be incremented by a multiple of 4: $spValue", MemoryErrorType.STACK_ONLY_INCREMENTS_OF_4)
 
                 if (spValue > currentSpValue) {
-                    // clear all objects between lowerLimit and spValue and all objects that overlap with spValue
+                    // clear all objects between currentSpValue and spValue and all objects that overlap with spValue
                     val addressRange = currentSpValue.rangeUntil(spValue)
-                    if (addressRange.any { memoryMap[it] == null }) throwToList("unused stack space in range $addressRange", MemoryErrorType.STACK_RESERVED_TOO_MUCH_SPACE)
+                    if (addressRange.any { memoryMap[it] == null }) {
+                        if ((spValue - currentSpValue) % 16 == 0L) {
+                            (currentSpValue..<spValue step 16)
+                                .map { it..<(it + 16) } // 16-byte-segments
+                                .dropWhile { it.all { memoryMap[it] != null } } // drop full segments
+                                .drop(1) // one 16-byte-segment is allowed to not be full.
+                                .forEach { throwToList("unused stack space in range $it", MemoryErrorType.STACK_RESERVED_TOO_MUCH_SPACE) }
+                        } else {
+                            throwToList("unused stack space in range $addressRange", MemoryErrorType.STACK_RESERVED_TOO_MUCH_SPACE)
+                        }
+
+                    }
                     addressRange.forEach {
                         val stackType = memoryMap[it] ?: return@forEach
                         if (stackType != Type.REMAINDER) {

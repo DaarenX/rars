@@ -1,4 +1,0 @@
-{
-    "callingconvention": ["GENERAL_SAVE_AND_LOAD_AMOUNT_NOT_EQUAL","CALLER_SAVE_WRITE_WITHOUT_READ","CALLER_SAVE_WRITE_WITHOUT_READ"],
-    "memory": ["store instruction address not in range (2147479544 - 2147479548): 2147479540"]
-}

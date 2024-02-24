@@ -104,7 +104,6 @@ class CalleeSaveRegisterStatus(register: String, depth: Int): RegisterStatus(reg
 }
 
 class CallerSaveRegisterStatus(register: String, depth: Int): RegisterStatus(register, depth) {
-
     override fun onWriteAccess() {
         if (skipNextWriteAccess) {
             super.onWriteAccess()
@@ -122,7 +121,6 @@ class CallerSaveRegisterStatus(register: String, depth: Int): RegisterStatus(reg
     override fun onLeaveScope() {
         super.onLeaveScope()
         if (saveAmount > 1 ) throwToList("caller save register was saved more than once, should use callee save register instead", CallingConventionErrorType.SHOULD_USE_CALLEE_SAVE_INSTEAD_OF_CALLER_SAVE)
-
     }
 
     override fun onSave() {
@@ -139,17 +137,6 @@ class CallerSaveRegisterStatus(register: String, depth: Int): RegisterStatus(reg
 }
 
 class ArgumentRegisterStatus(register: String, depth: Int): RegisterStatus(register, depth) {
-
-    override fun onReadAccess() {
-//        println("read $this")
-        super.onReadAccess()
-    }
-
-    override fun onWriteAccess() {
-//        println("write $this")
-        super.onWriteAccess()
-    }
-
     override fun onExitProgram() {
         if (hasBeenWritten && !hasBeenRead) throwToList("written but never read", CallingConventionErrorType.GENERAL_REGISTER_WRITE_WITHOUT_READ)
     }
