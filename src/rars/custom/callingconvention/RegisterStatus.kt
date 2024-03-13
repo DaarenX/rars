@@ -104,6 +104,9 @@ class CalleeSaveRegisterStatus(register: String, depth: Int): RegisterStatus(reg
 }
 
 class CallerSaveRegisterStatus(register: String, depth: Int): RegisterStatus(register, depth) {
+    private var readAfterCallWithoutRestoring = false
+    private var hasBeenWrittenSinceLastCall = false
+
     override fun onWriteAccess() {
         if (skipNextWriteAccess) {
             super.onWriteAccess()
@@ -111,15 +114,26 @@ class CallerSaveRegisterStatus(register: String, depth: Int): RegisterStatus(reg
         }
         super.onWriteAccess()
         if (saveAmount > loadAmount) throwToList("written after saving without restoring", CallingConventionErrorType.CALLER_SAVE_WRITE_AFTER_SAVE)
+        if (enteredNewScope) hasBeenWrittenSinceLastCall = true
+    }
+
+    override fun onReadAccess() {
+        if (skipNextReadAccess) {
+            super.onReadAccess()
+            return
+        }
+        super.onReadAccess()
+        if (!hasBeenWrittenSinceLastCall && enteredNewScope) readAfterCallWithoutRestoring = true
     }
 
     override fun onEnterNewScope() {
-        if (hasBeenWritten && saveAmount == 0)  throwToList("save missing before call", CallingConventionErrorType.CALLER_SAVE_MISSING_SAVE)
+        hasBeenWrittenSinceLastCall = false
         enteredNewScope = true
     }
 
     override fun onLeaveScope() {
         super.onLeaveScope()
+        if (readAfterCallWithoutRestoring && hasBeenWritten && saveAmount == 0)  throwToList("save missing before call", CallingConventionErrorType.CALLER_SAVE_MISSING_SAVE)
         if (saveAmount > 1 ) throwToList("caller save register was saved more than once, should use callee save register instead", CallingConventionErrorType.SHOULD_USE_CALLEE_SAVE_INSTEAD_OF_CALLER_SAVE)
     }
 

@@ -85,10 +85,6 @@ class CallingConventionChecker: ScopeAware, Observer {
     }
 
     override fun onExitProgram() {
-//        val lastMap = mapStack.removeFirstOrNull()
-//        if (lastMap != null) {
-//            throw CallingConventionCheckerException("should not happen exited program in subroutine")
-//        }
         registerStatusMap.forEach { (_, regStatus) ->
             regStatus.onExitProgram()
         }
