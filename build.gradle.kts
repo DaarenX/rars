@@ -27,6 +27,6 @@ application {
 
 tasks {
     named<ShadowJar>("shadowJar") {
-        destinationDirectory.set(file("../Bachelorarbeit"))
+        destinationDirectory.set(file("../ba_stats"))
     }
 }

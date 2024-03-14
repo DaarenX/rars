@@ -42,7 +42,7 @@ class MemoryChecker(spBaseAddress: Long): Observer, ScopeAware {
                     addressRange.forEach {
                         val stackType = memoryMap[it] ?: return@forEach
                         if (stackType != Type.REMAINDER) {
-                            it.rangeUntil(it + stackType.size).forEach { x -> memoryMap.remove(x) }
+                            deleteWholeObjectFromMemory(it)
                         }
 
                     }
@@ -55,14 +55,14 @@ class MemoryChecker(spBaseAddress: Long): Observer, ScopeAware {
     fun assembleDataStore(address: Long, size: Int) {
         val type = Type.entries.first { it.size == size }
         val addressRange = address.rangeUntil(address + type.size)
-        addressRange.drop(1).forEach { memoryMap[it] = Type.REMAINDER }
         memoryMap[address] = type
+        addressRange.drop(1).forEach { memoryMap[it] = Type.REMAINDER }
         return
     }
 
     fun checkStore(address: Long, type: Type) {
-        if (address >= Memory.stackLimitAddress && address < Memory.stackBaseAddress) return checkStackStore(address, type) // no stack access
-        if (address >= Memory.dataSegmentBaseAddress && address > Memory.dataSegmentLimitAddress) return checkDataStore(address, type)
+        if (address >= Memory.stackLimitAddress && address < Memory.stackBaseAddress) return checkStackStore(address, type)
+        if (address >= Memory.dataSegmentBaseAddress && address < Memory.dataSegmentLimitAddress) return checkDataStore(address, type)
     }
 
     private fun checkStackStore(address: Long, type: Type) {
@@ -70,17 +70,33 @@ class MemoryChecker(spBaseAddress: Long): Observer, ScopeAware {
         if (address < currentSpValue || address + type.size > currentUpperLimit) throwToList("store instruction address not in range ($currentSpValue - $currentUpperLimit): $address", MemoryErrorType.STACK_STORE_NOT_IN_RESERVED_RANGE)
 
         val addressRange = address.rangeUntil(address + type.size)
-        val currentStackObject = memoryMap[address]
-        if (currentStackObject != null) {
-            address.rangeUntil(address + currentStackObject.size).forEach { memoryMap.remove(it) }
-        }
-
-        addressRange.drop(1).forEach { memoryMap[it] = Type.REMAINDER }
         memoryMap[address] = type
+        addressRange.drop(1).forEach { memoryMap[it] = Type.REMAINDER }
     }
 
     private fun checkDataStore(address: Long, type: Type) {
-        throw MemoryCheckerException("$address, $type")
+        val addressRange = address.rangeUntil(address + type.size)
+        val currentDataObject = memoryMap[address]
+
+        if (currentDataObject == Type.REMAINDER) {
+            var startAddressOfObject = address
+            while (memoryMap[startAddressOfObject] == Type.REMAINDER) {
+                startAddressOfObject -= 1
+            }
+            if (memoryMap[startAddressOfObject] == null) throw MemoryCheckerException("checkDataStore error")
+            deleteWholeObjectFromMemory(startAddressOfObject)
+        }
+
+        addressRange.forEach {
+            val objectType = memoryMap[it] ?: return@forEach
+            if (objectType != Type.REMAINDER) {
+                deleteWholeObjectFromMemory(it)
+            }
+
+        }
+
+        memoryMap[address] = type
+        addressRange.drop(1).forEach { memoryMap[it] = Type.REMAINDER }
     }
 
     fun checkLoad(address: Long, type: Type) {
@@ -134,6 +150,11 @@ class MemoryChecker(spBaseAddress: Long): Observer, ScopeAware {
     private fun throwToList(message: String, type: MemoryErrorType) {
         MemoryCheckerException(message).printStackTrace()
         exceptionList.add(type)
+    }
+
+    private fun deleteWholeObjectFromMemory(address: Long) {
+        val type = memoryMap[address] ?: throw MemoryCheckerException("trying to delete whole object when it is null")
+        address.rangeUntil(address + type.size).forEach { x -> memoryMap.remove(x) }
     }
 }
 

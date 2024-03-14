@@ -168,7 +168,6 @@ class ReturnAddressRegisterStatus(depth: Int): RegisterStatus("ra", depth) {
     override fun onEnterNewScope() {
         if (depth >= 1 && saveAmount == loadAmount)  {
             throwToList("missing ra save", CallingConventionErrorType.RETURN_ADDRESS_REGISTER_MISSING_SAVE)
-            throw CallingConventionCheckerException("missing ra save")
         }
     }
     override fun onLeaveScope() = Unit
